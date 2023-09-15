@@ -49,7 +49,7 @@ Separare lo siguiente en secciones para mejor entendimiento.
 La funcion anterior es la que verificara si tenemos NFC en nuestro telefono.
 Si el telefono cuenta con NFC pero lo tiene inactivo retornara un False tal cual como si el telefono no contara con NFC.  
 Por lo contrario regresara un true indicando que tiene el servicio activo, si es asi iniciaremos la lectura de tarjetas NFC con el metodo `read()`  
-
+Dejare dos formas
 2. read();
 ```dart
     read()async{
@@ -67,12 +67,34 @@ Por lo contrario regresara un true indicando que tiene el servicio activo, si es
         },
         )
     }
+    read() async {
+        try {
+          await NfcManager.instance.startSession(
+            onDiscovered: (NfcTag tag) async {
+            final ndef = Ndef.from(tag);
+            if (ndef != null) {
+              if (ndef.cachedMessage != null) {
+                for (var element in ndef.cachedMessage!.records) {
+                final dataText = String.fromCharCodes(element.payload);
+                }
+              }
+            }
+          },
+        } 
+      }
 ```
 Vamos por puntos.
+#### Primera forma
 - Primero, Iniciamos la lectura de tarjetas NFC utilizando `NfcManager.instance.startSession()`.  
 - Segundo, Esto nos regresara un mapa con la informacion de la tarjeta detectada, lo que haremos ahora sera pasarla al modelo `Ndef` utilizando `Ndef.from(tag)`.  
 - Tercero, Si la tarjeta NFC es compatible con el estándar NDEF (NFC Data Exchange Format),entonces  se lee el contenido de la tarjeta NFC utilizando `ndef.read()`. Esto puede incluir datos como texto, enlaces u otra información almacenada en la tarjeta.  
 - Cuarto,  Si se lee con éxito algún dato de la tarjeta y su longitud es mayor que cero, se extrae el primer registro (En este caso) de los datos leídos utilizando `message.records[0]`, y se convierte en un texto legible mediante `String.fromCharCodes(record.payload)`.
+
+#### Segunda forma del ejemplo
+Es basicamente lo mismo solo que en esta manipulamos y obtenemos los datos que mas nos interesan y estos son los que vienen en el key de `cacheMessage` 
+lo recorremos para obtener todos los datos que contenga y por ultima pasamos esos datos de bytes a string.
+
+
 - Y por ultimo finalizamos la lectura de tarjetas NFC con `stop()`  
 3. stop()  
 ```dart
@@ -88,10 +110,12 @@ Vamos por puntos.
 ```
 Este metodo es con el cual finalizaremos cada lectura que se haga o este activa en el telefono o app.  
 
+
 Y listo. Eso seria todo para la lectura de nfc, ahora pasaremos a la escritura de datos en una tarjeta NFC.  
 
 ### Escritura de datos
-Para ello utilizaremos un solo metodo anterior mente usado pero modificado para poder escribir datos en la tarjeta  
+Para ello utilizaremos un solo metodo anterior mente usado pero modificado para poder escribir datos en la tarjeta.
+ 
 1. writeData();
 ```dart
 Future<void> writeData(String contactNumber) async {
@@ -99,7 +123,6 @@ Future<void> writeData(String contactNumber) async {
     stop();
     try {
       await nfcManager.startSession(
-        alertMessage: 'Detected',
         onDiscovered: (NfcTag tag) async {
           final ndef = Ndef.from(tag);
           if (ndef != null) {
@@ -115,6 +138,7 @@ Future<void> writeData(String contactNumber) async {
     }
   }
 
+ 
 ```
 Bien, antes que nada recueda siempre incluir el metodo `stop()`
 antes de iniciar lecturas, esto para finalizar una que previamente quedara abierta o este activa y evitar problemas.  
@@ -135,11 +159,46 @@ de lo contrario quedara activa y no queremos eso.
 
 Eso seria todo para escribir datos en una tarjeta nfc.
 
+### Emulacion NFC
+
+Con la ayuda de mi amigo Angel despues de una busqueda extensiva dimos con un buen plugin funcional y muy estable para poder lograr esto, lo malo esque solo es posible en android.
+> Nota: No me quejo soy pobre y no tengo Iphone :c
+Por lo que iOS, perdonanos pero quedaste por fuera de esto por esta vez.
+
+Aqui como el como funciona haciendo uso del plugin [flutter_nfc_hce](https://pub.dev/packages/flutter_nfc_hce)
+Los ajustes necesarios son un poco largo asi que para ello te invito a  navegar y leerla desde su doc.
+
+Primero no encontraremos con dos metodos `startEmulation()` y `stopEmulation()`  
+1. startEmulation()
+```dart
+startEmulation()async{
+   await _flutterNfcHcePlugin.startNfcHce('your text plain').then((value) {
+        //code here
+      }).onError((err, stacktrace) {
+        //handle error
+      });
+}
+```
+En el metodo anterior no hay mucho que hacer mas que mandar tu dato y definir el tipo de dato, para ello el `mimeType`
+En este ejemplo enviaremos un textoPlano que sera el tipo por defecto.
+2. stopEmulation()
+```dart
+stopEmulation()async{
+ await _flutterNfcHcePlugin.stopNfcHce();
+
+}
+```
+En el anterior el metodo que detiene la emulacion y listo.
+Con esto podras emular un tag NFC con tu dispositivo para lo que necesites :)
+
+
+
 ## NOTA
-Recuerda tener en cuenta que esto es un ejemplo sencillo del uso del paquete `nfc_manager`  
+Recuerda tener en cuenta que esto es un ejemplo sencillo del uso del paquete `nfc_manager`  y `flutter_nfc_hce`
 Seguramente tendras que hacer algo mas complejo, como validar el tipo de tarjeta que recibes, que se pueda escribir informacion, que sea compatible etc...  
 
 Porque si, hay tarjetas las cuales no se les puede escribir informacion ni leer.  
-Pero ya eso es algo que deberas invetigar por ti mismo, espero que esta mini guia de uso haya sido de utilidad.
-> Si quiere colaborar para mejorar el ejemplode proyecto o explicacion dada aqui eres bienvendo/a.
+Pero ya eso es algo que deberas invetigar por ti mismo, espero que esta mini guia de uso haya sido de utilidad si fue asi espero puedas dejar tu estrella para apoyarnos.
+
+> Si quiere colaborar para mejorar  algun proyecto subido o explicacion dada eres bienvendo/a, en mi perfil estan mis redes donde puedes ponerte en contacto conmigo 
 
