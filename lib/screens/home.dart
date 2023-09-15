@@ -1,24 +1,8 @@
 import 'package:flutter/material.dart';
-import 'pages/read_data_nfc.dart';
-import 'pages/widgets/button.dart';
-import 'pages/write_data_nfc.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'NFC Demo App',
-      debugShowCheckedModeBanner: false,
-      home: InitialPage(),
-    );
-  }
-}
+import 'scan_nfc.dart';
+import 'widgets/custom_btn.dart';
+import 'write_nfc.dart';
 
 class InitialPage extends StatelessWidget {
   const InitialPage({super.key});
@@ -36,7 +20,7 @@ class InitialPage extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (ctx) => const ReadNfcPage(),
+                  builder: (ctx) => const ScanNFCpage(),
                 ),
               ),
               textButton: "Scann NFC",
@@ -58,4 +42,4 @@ class InitialPage extends StatelessWidget {
   }
 }
 
- 
+//interfaz para la escritura de datos que enviaremos con nfc
